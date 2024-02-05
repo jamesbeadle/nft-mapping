@@ -25,7 +25,7 @@ actor {
     mapped: Bool;
   };
 
-  stable var userNFTs: [UserNFT] = [
+  stable var mappedNFTs: [UserNFT] = [
     { number = 1; owner = ""; nnsPrincipal = ""; mapped = false;},
     { number = 2; owner = ""; nnsPrincipal = ""; mapped = false;},
     { number = 3; owner = ""; nnsPrincipal = ""; mapped = false;},
@@ -165,7 +165,7 @@ actor {
   private func mapNFT(accountIdentifier: Text, nnsPrincipal: Text){
 
     let updatedNFTsBuffer = Buffer.fromArray<UserNFT>([]);
-    for(nft in Iter.fromArray(userNFTs)){
+    for(nft in Iter.fromArray(mappedNFTs)){
       if(nft.owner == accountIdentifier){
         updatedNFTsBuffer.add({
           number = nft.number; owner = nft.owner; nnsPrincipal = nnsPrincipal; mapped = true; 
@@ -176,11 +176,27 @@ actor {
       }
     };
 
-    userNFTs := Buffer.toArray(updatedNFTsBuffer);
+    mappedNFTs := Buffer.toArray(updatedNFTsBuffer);
   };
 
   public shared query ({caller}) func getMappedNFTs(): async [UserNFT] {
-    return userNFTs;
+    return mappedNFTs;
+  };
+
+  public shared ({caller}) func getUserNFTs(): async [NFT] {
+    let nfts = await getNFTs();
+
+    let userNFTsBuffer = Buffer.fromArray<NFT>([]);
+
+    for(nft in Iter.fromArray(nfts)){
+
+      let ownerAccount = computeExtTokenIdentifier(caller, nft.tokenIndex);
+      if(nft.accountIdentifier == ownerAccount){
+        userNFTsBuffer.add(nft);
+      }
+    };
+
+    return Buffer.toArray(userNFTsBuffer);
   };
 
   public func getNFTs() : async [NFT] {
