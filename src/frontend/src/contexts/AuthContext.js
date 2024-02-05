@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
       if (identity !== false) {
         setIsAuthenticated(true);
         Actor.agentOf(backend_actor).replaceIdentity(identity);
-        const nfts = await backend_actor.getUserNFTs();
+        const nfts = [];// await backend_actor.getUserNFTs(); //TODO: Add back in
         setUserNFTs(nfts);
       } else {
         setIsAuthenticated(false);

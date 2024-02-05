@@ -52,8 +52,29 @@ module.exports = {
   // },
   module: {
     rules: [
-      { test: /\.(js|ts)x?$/, loader: "ts-loader" },
-      { test: /\.css$/, use: ['style-loader','css-loader'] },
+      {
+        test: /\.(js|ts)x?$/,
+        loader: "ts-loader"
+      },
+      {
+        test: /\.css$/,
+        use: [
+          'style-loader',
+          'css-loader',
+          {
+            loader: 'postcss-loader', // Add this loader
+            options: {
+              postcssOptions: {
+                ident: 'postcss',
+                plugins: [
+                  require('tailwindcss'), // Path to your Tailwind config
+                  require('autoprefixer'), // Autoprefixer as a plugin
+                ],
+              },
+            },
+          },
+        ],
+      },
       {
         test: /\.(png|jpe?g|gif)$/i,
         use: [
@@ -63,13 +84,6 @@ module.exports = {
               publicPath: '/',
             },
           },
-        ],
-      },
-      {
-        test: /\.s[ac]ss$/i,
-        use: [
-          "style-loader",
-          "css-loader",
         ],
       }
     ]

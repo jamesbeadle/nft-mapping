@@ -26,6 +26,7 @@ actor {
     nnsPrincipal: Text;
     mapped: Bool;
   };
+
   let hexChars = ["0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"];
 
   stable var mappedNFTs: [UserNFT] = [
@@ -199,18 +200,19 @@ actor {
   };
 
   public shared ({caller}) func mapNFTs(nnsPrincipal: Text) {
+    assert not Principal.isAnonymous(caller);
     
-    let owner = Principal.toText(caller);
+    let accountIdentifierBlob = Account.accountIdentifier(caller, Blob.fromArrayMut(Array.init(32, 0 : Nat8)));
+    let accountIdentifier = blobToHexString(accountIdentifierBlob);
     
     let nfts = await getNFTs();
 
     for(nft in Iter.fromArray(nfts)){
-      if(nft.accountIdentifier == ownerAccount){
+      if(nft.accountIdentifier == accountIdentifier){
         mapNFT(nft.accountIdentifier, nnsPrincipal);
       }
     };
   };
-
 
   private func mapNFT(accountIdentifier: Text, nnsPrincipal: Text){
 

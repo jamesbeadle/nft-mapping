@@ -1,5 +1,18 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+html{
+    background-color: #161819 !important;
+    color: white !important;
+}
 
 .custom-button{
-    color: whitesmoke !important;
+    background-color: #2ce3a6;
+    color: black;
+    border: none;
+    padding: 16px;
+    font-size: 20px;
+    border-radius: 8px;
 }
  
