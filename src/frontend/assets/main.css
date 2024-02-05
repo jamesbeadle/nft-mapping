@@ -11,8 +11,12 @@ html{
     background-color: #2ce3a6;
     color: black;
     border: none;
-    padding: 16px;
-    font-size: 20px;
-    border-radius: 8px;
+    @apply px-4 py-2 rounded-md
 }
  
+.fpl-purple-btn {
+    background-color: #7f56f1;
+    color: black;
+    border: none;
+    @apply px-4 py-2 rounded-md
+  }

@@ -5,8 +5,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import Home from "./components/Home";
 import '../assets/main.css';
 
-const App = () => {
-  
+const App = () => {  
   return (
     <AuthProvider>
       <Router>
