@@ -4,19 +4,18 @@ import { AuthContext } from "../contexts/AuthContext";
 
 
 const Home = () => {
-  const { userNFTs, isAuthenticated, login, logout, mapNFT, mappedNFTs, setLoading } = useContext(AuthContext);
+  const { userNFTs, isAuthenticated, login, logout, mapNFT, mappedNFTs } = useContext(AuthContext);
   const [principalId, setPrincipalId] = useState('');
   const isValidPrincipalId = /^[a-z0-9]{5}(-[a-z0-9]{5}){9}-[a-z0-9]{3}$/i.test(principalId);
   
   const handleMapNFTs = async () => {
     if (isValidPrincipalId) {
-      setLoading(true);
       await mapNFT(principalId);
-      setLoading(false);
     } else {
       alert('Please enter a valid Principal ID.');
     }
   };
+
 
   return (
     <div>
@@ -71,7 +70,7 @@ const Home = () => {
                     >
                       Map NFTs
                     </button>
-                    {mappedNFTs.length > 0 && mappedNFTs.find(x => x.owner == userNFTs[0].accountIdentifier).length > 0 ? 
+                    {mappedNFTs.length > 0 && mappedNFTs.find(x => x.owner == userNFTs[0].accountIdentifier) && mappedNFTs.filter(x => x.owner == userNFTs[0].accountIdentifier).length > 0 ? 
                       (<p>Current NNS Principal: {mappedNFTs.find(x => x.owner == userNFTs[0].accountIdentifier).nnsPrincipal}</p>) 
                       : (<p>Your NFTs are currently not mapped.</p>)}
                   </div>

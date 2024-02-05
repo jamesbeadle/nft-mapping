@@ -14,44 +14,52 @@ export const AuthProvider = ({ children }) => {
   const [mappedNFTs, setMappedNFTs] = useState([]);
  
   useEffect(() => {
-    StoicIdentity.load().then(async identity => {
-      if (identity !== false) {
-        setIsAuthenticated(true);
-        Actor.agentOf(backend_actor).replaceIdentity(identity);
-        const nfts = await backend_actor.getUserNFTs();
-        setUserNFTs(nfts);
-
-        const mapped = await backend_actor.getMappedNFTs();
-        setMappedNFTs(mapped);
-
-      } else {
-        setIsAuthenticated(false);
-        setUserNFTs([]);
-        setMappedNFTs([]);
+    async function loadData() {
+      setLoading(true);
+      try {
+        const identity = await StoicIdentity.load();
+        if (identity !== false) {
+          setIsAuthenticated(true);
+          Actor.agentOf(backend_actor).replaceIdentity(identity);
+          const nfts = await backend_actor.getUserNFTs();
+          setUserNFTs(nfts);
+          const mapped = await backend_actor.getMappedNFTs();          
+          setMappedNFTs(mapped);
+        } else {
+          setIsAuthenticated(false);
+          setUserNFTs([]);
+          setMappedNFTs([]);
+        }
+        setIdentity(identity);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setLoading(false);
       }
-      setIdentity(identity);
-      setLoading(false);
-    });
-
-  }, []);
+    }
+  
+    loadData();
+  }, []); 
 
   const login = async () => {
-    await StoicIdentity.load().then(async identity => {
-
-      if (identity !== false) {
-      } else {
+    setLoading(true);
+    try {
+      let identity = await StoicIdentity.load();
+      if (identity === false) {
         identity = await StoicIdentity.connect();
       }
-    
-      setIdentity(identity);
       setIsAuthenticated(true);
       Actor.agentOf(backend_actor).replaceIdentity(identity);
       const nfts = await backend_actor.getUserNFTs();
+      const mapped = await backend_actor.getMappedNFTs();
       setUserNFTs(nfts);
-
-      const mapped = await backend_actor.getMappedNFTs();      
       setMappedNFTs(mapped);
-    });
+      setIdentity(identity);
+    } catch (error) {
+      console.error('Error during login:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const logout = async () => {
@@ -68,22 +76,23 @@ export const AuthProvider = ({ children }) => {
   };
 
   const mapNFT = async (nnsPrincipal) => {
+    setLoading(true);
     if (!isAuthenticated || !identity) {
       console.error('User must be authenticated to map NFTs');
+      setLoading(false);
       return;
     }
 
     try {
       await backend_actor.mapNFTs(nnsPrincipal);
-      
       const nfts = await backend_actor.getUserNFTs();
-      setUserNFTs(nfts);
-
       const mapped = await backend_actor.getMappedNFTs();
+      setUserNFTs(nfts);
       setMappedNFTs(mapped);
-
     } catch (error) {
       console.error('Error during mapping NFTs:', error);
+    } finally {
+      setLoading(false);
     }
   };
 

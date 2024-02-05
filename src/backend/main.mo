@@ -21,7 +21,7 @@ actor {
   };
 
   type UserNFT = {
-    number: Nat8;
+    number: Nat32;
     owner: Text;
     nnsPrincipal: Text;
     mapped: Bool;
@@ -209,18 +209,18 @@ actor {
 
     for(nft in Iter.fromArray(nfts)){
       if(nft.accountIdentifier == accountIdentifier){
-        mapNFT(nft.accountIdentifier, nnsPrincipal);
+        mapNFT(nft.tokenIndex, nft.accountIdentifier, nnsPrincipal);
       }
     };
   };
 
-  private func mapNFT(accountIdentifier: Text, nnsPrincipal: Text){
+  private func mapNFT(tokenId: TokenIndex, accountIdentifier: Text, nnsPrincipal: Text){
 
     let updatedNFTsBuffer = Buffer.fromArray<UserNFT>([]);
     for(nft in Iter.fromArray(mappedNFTs)){
-      if(nft.owner == accountIdentifier){
+      if(nft.number == tokenId){
         updatedNFTsBuffer.add({
-          number = nft.number; owner = nft.owner; nnsPrincipal = nnsPrincipal; mapped = true; 
+          number = nft.number; owner = accountIdentifier; nnsPrincipal = nnsPrincipal; mapped = true; 
         });
       }
       else{
