@@ -26,14 +26,14 @@ const Home = () => {
           <ul>
             {userNFTs.map((nft, index) => (
               <li key={index}>
-                <p>Number: {nft.number}</p>
-                <p>Owner: {nft.owner}</p>
-                <p>Principal ID: {nft.nnsPrincipal}</p>
-                <p>Mapped: {nft.mapped ? 'Yes' : 'No'}</p>
+                <p>Token Index: {nft.tokenIndex}</p>
+                <p>Owner: {nft.accountIdentifier}</p>
               </li>
             ))}
           </ul>
           <br />
+                {/*
+
           <input
             type="text"
             value={principalId}
@@ -44,11 +44,12 @@ const Home = () => {
           <button className="custom-button" onClick={handleMapNFTs}>
             Map NFTs
           </button>
+ This is a comment in JSX */}
           <br />
-          <button className="custom-button" onClick={() => { logout(); setExpanded(false); }}>Disconnect</button>
+          <button className="custom-button" onClick={() => { logout(); }}>Disconnect</button>
         </>
       ) : (
-        <button className="custom-button" onClick={() => { login(); setExpanded(false); }}>Connect</button>
+        <button className="custom-button" onClick={() => { login(); }}>Connect</button>
       )}
     </div>
     

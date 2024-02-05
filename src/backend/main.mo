@@ -6,16 +6,18 @@ import Blob "mo:base/Blob";
 import Nat32 "mo:base/Nat32";
 import Int "mo:base/Int";
 import Nat8 "mo:base/Nat8";
+import Text "mo:base/Text";
+import Account "Account";
+
 actor {
   
 
   type TokenIndex = Nat32;
   type AccountIdentifier__1 = Text;
-  type NFT = {
+
+  type RegistryRecord = {
       tokenIndex: TokenIndex;
       accountIdentifier: AccountIdentifier__1;
-      canisterId: Text;
-      tokenId: Text;
   };
 
   type UserNFT = {
@@ -24,8 +26,10 @@ actor {
     nnsPrincipal: Text;
     mapped: Bool;
   };
+  let hexChars = ["0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"];
 
   stable var mappedNFTs: [UserNFT] = [
+    { number = 0; owner = ""; nnsPrincipal = ""; mapped = false;},
     { number = 1; owner = ""; nnsPrincipal = ""; mapped = false;},
     { number = 2; owner = ""; nnsPrincipal = ""; mapped = false;},
     { number = 3; owner = ""; nnsPrincipal = ""; mapped = false;},
@@ -144,9 +148,55 @@ actor {
     { number = 116; owner = ""; nnsPrincipal = ""; mapped = false;},
     { number = 117; owner = ""; nnsPrincipal = ""; mapped = false;},
     { number = 118; owner = ""; nnsPrincipal = ""; mapped = false;},
-    { number = 119; owner = ""; nnsPrincipal = ""; mapped = false;},
-    { number = 120; owner = ""; nnsPrincipal = ""; mapped = false;}
+    { number = 119; owner = ""; nnsPrincipal = ""; mapped = false;}
   ];
+
+  public shared ({caller}) func getUserNFTs(): async [RegistryRecord] {
+    assert not Principal.isAnonymous(caller);
+
+    let accountIdentifierBlob = Account.accountIdentifier(caller, Blob.fromArrayMut(Array.init(32, 0 : Nat8)));
+    let accountIdentifier = blobToHexString(accountIdentifierBlob);
+
+    let userNFTsBuffer = Buffer.fromArray<RegistryRecord>([]);
+    let registryRecords = await getNFTs();
+    for(record in Iter.fromArray(registryRecords)){
+      if(record.accountIdentifier == accountIdentifier){
+        userNFTsBuffer.add({
+          tokenIndex = record.tokenIndex;
+          accountIdentifier = record.accountIdentifier;
+        });
+      }
+    };
+
+    return Buffer.toArray(userNFTsBuffer);
+  };
+
+  let updateFn = func(nft: (Nat32, Text)): RegistryRecord {
+    return {
+      tokenIndex = nft.0;
+      accountIdentifier = nft.1;
+    };
+  };
+
+  private func getNFTs() : async [RegistryRecord] {
+    let nft_canister = actor ("ikuez-baaaa-aaaap-abf3q-cai"): actor { 
+      getRegistry: () -> async [(Nat32, Text)];
+    };
+
+    let registryRecords = await nft_canister.getRegistry();
+
+    let registry = Array.map<(Nat32, Text), RegistryRecord>(registryRecords, updateFn);
+
+    return registry;
+  };
+
+  private func blobToHexString(blob: Blob) : Text {
+    return Text.join("", Iter.map<Nat8, Text>(Iter.fromArray(Blob.toArray(blob)), func (x: Nat8) : Text {
+      let a = Nat8.toNat(x / 16);
+      let b = Nat8.toNat(x % 16);
+      hexChars[a] # hexChars[b]
+    }));
+  };
 
   public shared ({caller}) func mapNFTs(nnsPrincipal: Text) {
     
@@ -155,12 +205,12 @@ actor {
     let nfts = await getNFTs();
 
     for(nft in Iter.fromArray(nfts)){
-      let ownerAccount = computeExtTokenIdentifier(caller, nft.tokenIndex);
       if(nft.accountIdentifier == ownerAccount){
         mapNFT(nft.accountIdentifier, nnsPrincipal);
       }
     };
   };
+
 
   private func mapNFT(accountIdentifier: Text, nnsPrincipal: Text){
 
@@ -182,60 +232,5 @@ actor {
   public shared query ({caller}) func getMappedNFTs(): async [UserNFT] {
     return mappedNFTs;
   };
-
-  public shared ({caller}) func getUserNFTs(): async [NFT] {
-    let nfts = await getNFTs();
-
-    let userNFTsBuffer = Buffer.fromArray<NFT>([]);
-
-    for(nft in Iter.fromArray(nfts)){
-
-      let ownerAccount = computeExtTokenIdentifier(caller, nft.tokenIndex);
-      if(nft.accountIdentifier == ownerAccount){
-        userNFTsBuffer.add(nft);
-      }
-    };
-
-    return Buffer.toArray(userNFTsBuffer);
-  };
-
-  public func getNFTs() : async [NFT] {
-    let nft_canister = actor ("ikuez-baaaa-aaaap-abf3q-cai"): actor { 
-      getRegistry: () -> async [(Nat32, Text)];
-    };
-
-    let registryRecords = await nft_canister.getRegistry();
-
-    let registry = Array.map<(Nat32, Text), NFT>(registryRecords, updateFn);
-
-    return registry;
-  };
-
-  let updateFn = func(nft: (Nat32, Text)): NFT {
-    return {
-          tokenIndex = nft.0;
-          accountIdentifier = nft.1;
-          canisterId = "";
-          tokenId = "";
-        };
-  };
-
-  private func computeExtTokenIdentifier(principal: Principal, index: Nat32) : Text {
-    var identifier : [Nat8] = [10, 116, 105, 100]; //b"\x0Atid"
-    var principalBlob : [Nat8] = Blob.toArray(Principal.toBlob(principal));
-
-    let buffer = Buffer.fromArray<Nat8>(identifier);
-    buffer.append(Buffer.fromArray(principalBlob));
-
-    var rest : Nat32 = index;
-    for (i in Iter.revRange(3, 0)) {
-      let power2 = Nat32.fromNat(Int.abs(Int.pow(2, (i * 8))));
-      let val : Nat32 = rest / power2;
-      buffer.append(Buffer.fromArray([Nat8.fromNat(Nat32.toNat(val))]));
-      rest := rest - (val * power2);
-    };
-    return Principal.toText(Principal.fromBlob(Blob.fromArray(Buffer.toArray(buffer))));
-  };
-
   
 };

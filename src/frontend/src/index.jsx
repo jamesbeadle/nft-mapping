@@ -10,6 +10,7 @@ const App = () => {
     <AuthProvider>
       <Router>
         <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+          <h1>Test</h1>
           <Routes>
             <Route path="/" element={<Home />} />
           </Routes>
