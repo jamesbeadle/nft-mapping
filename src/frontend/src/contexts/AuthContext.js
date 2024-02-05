@@ -10,18 +10,21 @@ export const AuthProvider = ({ children }) => {
   const [identity, setIdentity] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [userNFTs, setUserNFTs] = useState([]);
  
   useEffect(() => {
     StoicIdentity.load().then(async identity => {
       if (identity !== false) {
         setIsAuthenticated(true);
         Actor.agentOf(backend_actor).replaceIdentity(identity);
+        const nfts = await backend_actor.getUserNFTs();
+        setUserNFTs(nfts);
       } else {
         setIsAuthenticated(false);
+        setUserNFTs([]);
       }
       setIdentity(identity);
       setLoading(false);
-      
     });
 
   }, []);
@@ -37,7 +40,8 @@ export const AuthProvider = ({ children }) => {
       setIdentity(identity);
       setIsAuthenticated(true);
       Actor.agentOf(backend_actor).replaceIdentity(identity);
-      
+      const nfts = await backend_actor.getUserNFTs();
+      setUserNFTs(nfts);
     });
   };
 
@@ -49,11 +53,30 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setIdentity(null);
       setIsAuthenticated(false);
+      setUserNFTs([]);
+    }
+  };
+
+  const mapNFT = async (nnsPrincipal) => {
+    if (!isAuthenticated || !identity) {
+      console.error('User must be authenticated to map NFTs');
+      return;
+    }
+
+    try {
+      // Call the backend actor's mapNFTs function
+      await backend_actor.mapNFTs(nnsPrincipal);
+
+      // Optionally, refresh the list of NFTs after mapping
+      const nfts = await backend_actor.getUserNFTs();
+      setUserNFTs(nfts);
+    } catch (error) {
+      console.error('Error during mapping NFTs:', error);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ identity, isAuthenticated, setIsAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ identity, isAuthenticated, userNFTs, setUserNFTs, setIsAuthenticated, login, logout, mapNFT }}>
       {!loading && children}
     </AuthContext.Provider>
   );
