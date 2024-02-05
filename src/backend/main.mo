@@ -2,6 +2,10 @@ import Iter "mo:base/Iter";
 import Buffer "mo:base/Buffer";
 import Principal "mo:base/Principal";
 import Array "mo:base/Array";
+import Blob "mo:base/Blob";
+import Nat32 "mo:base/Nat32";
+import Int "mo:base/Int";
+import Nat8 "mo:base/Nat8";
 actor {
   
 
@@ -151,7 +155,8 @@ actor {
     let nfts = await getNFTs();
 
     for(nft in Iter.fromArray(nfts)){
-      if(nft.accountIdentifier == owner){
+      let ownerAccount = computeExtTokenIdentifier(caller, nft.tokenIndex);
+      if(nft.accountIdentifier == ownerAccount){
         mapNFT(nft.accountIdentifier, nnsPrincipal);
       }
     };
@@ -197,6 +202,23 @@ actor {
           canisterId = "";
           tokenId = "";
         };
+  };
+
+  private func computeExtTokenIdentifier(principal: Principal, index: Nat32) : Text {
+    var identifier : [Nat8] = [10, 116, 105, 100]; //b"\x0Atid"
+    var principalBlob : [Nat8] = Blob.toArray(Principal.toBlob(principal));
+
+    let buffer = Buffer.fromArray<Nat8>(identifier);
+    buffer.append(Buffer.fromArray(principalBlob));
+
+    var rest : Nat32 = index;
+    for (i in Iter.revRange(3, 0)) {
+      let power2 = Nat32.fromNat(Int.abs(Int.pow(2, (i * 8))));
+      let val : Nat32 = rest / power2;
+      buffer.append(Buffer.fromArray([Nat8.fromNat(Nat32.toNat(val))]));
+      rest := rest - (val * power2);
+    };
+    return Principal.toText(Principal.fromBlob(Blob.fromArray(Buffer.toArray(buffer))));
   };
 
   
