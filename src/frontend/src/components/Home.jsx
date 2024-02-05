@@ -1,5 +1,6 @@
-import React from 'react';
-import { AuthContext } from "../../contexts/AuthContext";
+import React, { useState, useContext  } from "react";
+
+import { AuthContext } from "../contexts/AuthContext";
 
 
 const Home = () => {
@@ -32,19 +33,22 @@ const Home = () => {
               </li>
             ))}
           </ul>
+          <br />
           <input
             type="text"
             value={principalId}
             onChange={(e) => setPrincipalId(e.target.value)}
             placeholder="Enter Principal ID to map NFTs"
           />
+          <br />
           <button className="custom-button" onClick={handleMapNFTs}>
             Map NFTs
           </button>
-          <Button className="custom-button" onClick={() => { logout(); setExpanded(false); }}>Disconnect</Button>
+          <br />
+          <button className="custom-button" onClick={() => { logout(); setExpanded(false); }}>Disconnect</button>
         </>
       ) : (
-        <Button className="custom-button" onClick={() => { login(); setExpanded(false); }}>Connect</Button>
+        <button className="custom-button" onClick={() => { login(); setExpanded(false); }}>Connect</button>
       )}
     </div>
     
